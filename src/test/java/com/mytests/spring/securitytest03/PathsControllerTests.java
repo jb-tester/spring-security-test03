@@ -52,7 +52,7 @@ public class PathsControllerTests {
     @org.junit.Test
     public void path2IsForAdminsOnly() throws Exception {
 
-        mockMvc.perform(get("/path2").with(user("admin").password("jolt").roles("ADMIN"))).andExpect(status().isOk());
+        mockMvc.perform(get("/path2").with(user("admin").password("jolt").roles("ADMIN"))).andExpect(status().is(200));
         mockMvc.perform(get("/path2").with(user("me").password("jolt").roles("VIP"))).andExpect(status().isForbidden());
 
     }

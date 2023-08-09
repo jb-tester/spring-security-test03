@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -45,9 +46,10 @@ public class SecurityConfig {
 
         return new InMemoryUserDetailsManager(user, admin, guest);
     }
+/*
 
-   /*@Configuration
-   @Order(1)
+    @Configuration
+    @Order(1)
     public static class Path1SecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
         protected void configure(HttpSecurity http) throws Exception {
@@ -55,11 +57,12 @@ public class SecurityConfig {
                     .antMatcher("/path1/**")   // no reference here https://youtrack.jetbrains.com/issue/IDEA-286466
                     .authorizeHttpRequests(
                             authorize -> authorize
-                            .anyRequest().hasRole("ADMIN")  // no reference since authorizeHttpRequests() is used - fixed
+                                    .anyRequest().hasRole("ADMIN")  // no reference since authorizeHttpRequests() is used - fixed
                     )
                     .httpBasic(withDefaults());
         }
     }
+
     @Configuration
     @Order(2)
     public static class Path11SecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
@@ -70,11 +73,37 @@ public class SecurityConfig {
                     .mvcMatcher("/path11/**") // no reference here https://youtrack.jetbrains.com/issue/IDEA-286467
                     .authorizeHttpRequests(
                             authorize -> authorize
-                                    .anyRequest().hasAnyAuthority("ROLE_VIP","ROLE_ADMIN")  // no reference since authorizeHttpRequests() is used - fixed
+                                    .anyRequest().hasAnyAuthority("ROLE_VIP", "ROLE_ADMIN")  // no reference since authorizeHttpRequests() is used - fixed
                     )
                     .httpBasic(withDefaults());
         }
-    }*/
+    }
+*/
+/*
+
+    @Configuration
+    public static class PathsWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+        @Bean
+        public SecutityUtil secutityUtil() {
+            return new SecutityUtil();
+        }
+
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http
+                    .authorizeRequests()
+                    .antMatchers("/", "/actuator").permitAll()
+                    .antMatchers(HttpMethod.GET, "/path3/**").access("hasAnyAuthority('ROLE_VIP','ROLE_ADMIN')")
+                    .regexMatchers("/path2.*").access("hasRole('ADMIN')") // reference
+                    .antMatchers("/secure").access("hasRole('ADMIN') or hasRole('VIP')") // roles are not underlined - fixed
+                    .antMatchers("/user/{uid}").access("@secutityUtil.checkUser(authentication,#uid)") // pathvar is not resolved
+                    .and()
+                    .formLogin(withDefaults());
+        }
+    }
+*/
+
+    ;
     /*@Configuration
     public static class SecretRegexpSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
@@ -108,6 +137,12 @@ public class SecurityConfig {
 
     @Configuration
     public static class PathsWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+        private final MyFilter myFilter;
+
+        public PathsWebSecurityConfigurerAdapter(MyFilter myFilter) {
+            this.myFilter = myFilter;
+        }
+
         @Bean
         public SecutityUtil secutityUtil() {
             return new SecutityUtil();
@@ -122,8 +157,9 @@ public class SecurityConfig {
                     .antMatchers("/secure").access("hasRole('ADMIN') or hasRole('VIP')") // roles are not underlined - fixed
                     .antMatchers("/user/{uid}").access("@secutityUtil.checkUser(authentication,#uid)") // pathvar is not resolved
                     .and()
+                    .addFilterAfter(myFilter, BasicAuthenticationFilter.class)
                     .formLogin(withDefaults());
         }
     }
-}
 
+}
